@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Singapore Weather Data Analysis</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px auto;
+            width: 80%;
+            color: #f0f0f0;
+        }
+        canvas {
+            max-width: 100%;
+        }
+    
+        ::-webkit-scrollbar {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+<div>
+<h2>Monthly Trends</h2>
+<canvas id="weatherChart"></canvas>
+</div>
+<script>
+        const ctx = document.getElementById('weatherChart').getContext('2d');
+
+        // Example aggregated data (replace with real data processing)
+        const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+        const temperatureData = [26, 27, 28, 29, 30, 31, 30, 30, 29, 28, 27, 26];
+        const humidityData = [80, 78, 77, 76, 75, 78, 80, 81, 82, 83, 84, 85];
+        const rainfallData = [300, 250, 200, 180, 150, 120, 100, 130, 200, 250, 300, 350];
+
+        const chart = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: months,
+                datasets: [
+                    {
+                        label: 'Average Temperature (°C)',
+                        data: temperatureData,
+                        borderColor: 'red',
+                        fill: false,
+                        yAxisID: 'y1',
+                    },
+                    {
+                        label: 'Average Humidity (%)',
+                        data: humidityData,
+                        borderColor: 'blue',
+                        fill: false,
+                        yAxisID: 'y2',
+                    },
+                    {
+                        label: 'Rainfall (mm)',
+                        data: rainfallData,
+                        borderColor: 'green',
+                        fill: false,
+                        yAxisID: 'y3',
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                scales: {
+                    y1: {
+                        type: 'linear',
+                        position: 'left',
+                        title: { display: true, text: 'Temperature (°C)' }
+                    },
+                    y2: {
+                        type: 'linear',
+                        position: 'right',
+                        title: { display: true, text: 'Humidity (%)' }
+                    },
+                    y3: {
+                        type: 'linear',
+                        position: 'right',
+                        title: { display: true, text: 'Rainfall (mm)' },
+                        grid: { drawOnChartArea: false }
+                    }
+                },
+                plugins: {
+                    tooltip: {
+                        mode: 'index',
+                        intersect: false,
+                    }
+                }
+            }
+        });
+    </script>
+</body>
+</html>

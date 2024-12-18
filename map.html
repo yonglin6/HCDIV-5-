@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Singapore Tourism Data Visualization</title>
+    <!-- 引入ECharts库 -->
+    <script src="https://cdn.jsdelivr.net/npm/echarts@5.4.1/dist/echarts.min.js"></script>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <style>
+        header {
+            color: white;
+            text-align: center;
+            padding: 1rem 0;
+            width: 100%;
+        }
+        nav {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin: 20px 0;
+        }
+        nav button {
+            background-color: #3949ab;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        nav button:hover {
+            background-color: #5c6bc0;
+        }
+        nav a {
+            display: block;
+            background-color: #3949ab;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            text-decoration: none;
+        }
+        nav a:hover {
+            background-color: #5c6bc0;
+        }
+        .map-container {
+            display: flex;
+            justify-content: space-between;
+            width: 95%;
+            margin: 1rem auto;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+            background: #c2c2ec;
+            overflow: hidden;
+        }
+        #map {
+            width: 70%;
+            height: auto;
+        }
+        .attraction-list {
+            width: 30%;
+            padding: 1rem;
+            overflow-y: auto;
+            background-color: #E6E6FA;
+        }
+        .attraction-list h3 {
+            margin: 0 0 1rem 0;
+            color: #2b5797;
+        }
+        .attraction-list ul {
+            list-style: none;
+            padding: 0;
+        }
+        .attraction-list li {
+            margin-bottom: 1rem;
+            line-height: 1.4;
+            cursor: pointer;
+            transition: background 0.3s;
+            color: #191970;
+            border-radius: 10px;
+        }
+        .attraction-list li:hover {
+            background-color: #E1FFFF;
+
+        }
+        .highlight {
+            background-color: #E1FFFF;
+        }
+        footer {
+            text-align: center;
+            padding: 1rem;
+            background-color: #2b5797;
+            color: white;
+            margin-top: 2rem;
+            width: 100%;
+        }
+        .particle {
+            position: absolute;
+            width: 2px;
+            height: 2px;
+            background-color: white;
+            border-radius: 50%;
+            animation: twinkle 2s infinite;
+        }
+
+        @keyframes twinkle {
+            0%, 100% {
+                opacity: 0.2;
+            }
+            50% {
+                opacity: 1;
+            }
+        }
+        ::-webkit-scrollbar {
+            display: none;
+        }
+    </style>
+</head>
+<body>        
+        <!-- Singapore map display and attraction list -->
+        <div class="map-container">
+        <div id="map"></div>
+        <div class="attraction-list">
+        <h3>Main attraction list</h3>
+        <ul id="attraction-list">
+        <li data-index="0"><b>Marina Bay Gardens</b><br>Travel route: MRT to Bayfront Station, walk about 5 minutes<br>Suggested time: Watch the night view in the evening</li>
+        <li data-index="1"><b>Universal Studios</b><br>Travel route: Sentosa Express or bus<br>Suggested time: Enter the park in the morning to avoid the crowds</li>
+        <li data-index="2"><b>Merlion Park</b><br>Travel route: MRT to Raffles Place Station, about 10 minutes walk<br>Suggested time: early morning or night photo</li>
+        <li data-index="3"><b>Sentosa</b><br>Travel route: Sentosa MRT, free entry<br>Suggested time: one-day trip, suitable for families</li>
+        <li data-index="4"><b>Little India</b><br>Travel route: MRT to Little India Station<br>Suggested time: taste authentic food at noon</li>
+        <li data-index="5"><b>Singapore Zoo</b><br>Travel route: bus or taxi, located in the north<br>Suggested time: morning animal viewing</li>
+        </ul>
+        </div>
+        </div>
+
+    <div class="container">
+        <!-- 游客趋势折线图 -->
+        <div id="visitor-trend" class="chart-box"></div>
+        <!-- 游客来源地饼图 -->
+        <div id="visitor-origin" class="chart-box"></div>
+        <!-- 旅游收入柱状图 -->
+        <div id="tourism-revenue" class="chart-box"></div>
+    </div>
+
+
+    <!-- Leaflet地图配置 -->
+    <script>
+        const map = L.map('map', {
+            center: [1.3521, 103.8198],
+            zoom: 12
+        });
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19 }).addTo(map);
+
+        const attractions = [
+        { name: "Gardens by the Bay", coords: [1.2816, 103.8636], description: "Unique super trees and plant domes." },
+        { name: "Universal Studios", coords: [1.2540, 103.8238], description: "Popular theme park for families." },
+        { name: "Merlion Park", coords: [1.2869, 103.8545], description: "The iconic Merlion statue overlooking Marina Bay." },
+        { name: "Sentosa", coords: [1.2494, 103.8303], description: "An island that combines beaches, entertainment and leisure." },
+        { name: "Little India", coords: [1.3065, 103.8492], description: "A vibrant neighbourhood with Indian culture and cuisine." },
+        { name: "Singapore Zoo", coords: [1.4043, 103.7930], description: "A world-class open zoo." }
+        ];
+
+        const markers = [];
+        attractions.forEach((attraction, index) => {
+            const marker = L.marker(attraction.coords).addTo(map).bindPopup(`<b>${attraction.name}</b><br>${attraction.description}`);
+            markers.push(marker);
+        });
+
+        // 事件绑定：点击列表高亮地图标记
+        document.querySelectorAll('#attraction-list li').forEach((item) => {
+            item.addEventListener('click', function() {
+                const index = this.getAttribute('data-index');
+                map.setView(attractions[index].coords, 14);
+                markers[index].openPopup();
+                document.querySelectorAll('#attraction-list li').forEach(li => li.classList.remove('highlight'));
+                this.classList.add('highlight');
+            });
+        });
+    </script>
+</body>
+</html>

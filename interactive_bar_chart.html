@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Top 9 Countries with the Most Tourists Arriving to Singapore</title>
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: #0b1d3d; /* Starry sky background */
+            font-family: 'Arial', sans-serif;
+        }
+        h1 {
+            text-align: center;
+            color: #fff;
+            margin: 20px;
+            font-size: 28px;
+            text-shadow: 0 0 10px #aaa;
+        }
+        .tooltip {
+            position: absolute;
+            background: rgba(0, 0, 0, 0.8);
+            color: white;
+            padding: 6px;
+            font-size: 12px;
+            border-radius: 5px;
+            opacity: 0;
+            pointer-events: none;
+        }
+        .axis-label {
+            font-size: 14px;
+            font-weight: bold;
+            fill: #fff;
+        }
+        .legend text {
+            font-size: 12px;
+            fill: #fff;
+            font-weight: bold;
+        }
+        .bar {
+            stroke: #ddd;
+            stroke-width: 1;
+            filter: url(#glow);
+        }
+        .grid line {
+            stroke: #ddd;
+            stroke-width: 2;
+            filter: url(#glow);
+        }
+        .star {
+            fill: white;
+            opacity: 0.6;
+        }
+        ::-webkit-scrollbar {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <h1>Top 9 Countries with the Most Tourists Arriving to Singapore</h1>
+    <div id="chart"></div>
+    <script>
+        const data = [
+            { country: "Total International Arrivals", value: 55996567 },
+            { country: "Southeast Asia", value: 20309860 },
+            { country: "China", value: 19181335 },
+            { country: "Indonesia", value: 9035647 },
+            { country: "Europe", value: 6719249 },
+            { country: "South Asia", value: 5364872 },
+            { country: "Oceania", value: 4590365 },
+            { country: "India", value: 4404930 },
+            { country: "North Asia", value: 4113163 }
+        ];
+
+        const margin = { top: 50, right: 20, bottom: 100, left: 300 },
+              width = 1000 - margin.left - margin.right,
+              height = 600 - margin.top - margin.bottom;
+
+        const svg = d3.select("#chart")
+                      .append("svg")
+                      .attr("width", width + margin.left + margin.right)
+                      .attr("height", height + margin.top + margin.bottom);
+
+        // Starry sky background
+        for (let i = 0; i < 150; i++) {
+            svg.append("circle")
+               .attr("class", "star")
+               .attr("cx", Math.random() * (width + margin.right))
+               .attr("cy", Math.random() * (height + margin.top))
+               .attr("r", Math.random() * 2);
+        }
+
+        const chart = svg.append("g")
+                         .attr("transform", `translate(${margin.left}, ${margin.top})`);
+
+        // Glow effect
+        const defs = svg.append("defs");
+        const glow = defs.append("filter").attr("id", "glow");
+        glow.append("feGaussianBlur").attr("stdDeviation", "3").attr("result", "coloredBlur");
+        glow.append("feMerge")
+            .selectAll("feMergeNode")
+            .data(["coloredBlur", "SourceGraphic"])
+            .enter()
+            .append("feMergeNode").attr("in", d => d);
+
+        // Gradients
+        const lightOrangePink = defs.append("linearGradient")
+                                    .attr("id", "lightOrangePink")
+                                    .attr("x1", "0%").attr("x2", "100%");
+        lightOrangePink.append("stop").attr("offset", "0%").attr("stop-color", "#ffdab9");
+        lightOrangePink.append("stop").attr("offset", "100%").attr("stop-color", "#ffb6c1");
+
+        const lightPinkBlue = defs.append("linearGradient")
+                                  .attr("id", "lightPinkBlue")
+                                  .attr("x1", "0%").attr("x2", "100%");
+        lightPinkBlue.append("stop").attr("offset", "0%").attr("stop-color", "#add8e6");
+        lightPinkBlue.append("stop").attr("offset", "100%").attr("stop-color", "#f0b6ff");
+
+        const x = d3.scaleLinear().domain([0, d3.max(data, d => d.value)]).range([0, width]);
+        const y = d3.scaleBand().domain(data.map(d => d.country)).range([0, height]).padding(0.1);
+
+        const tooltip = d3.select("body").append("div").attr("class", "tooltip");
+
+        // Gridlines
+        chart.append("g").attr("class", "grid")
+             .call(d3.axisBottom(x).tickSize(height).tickFormat(""));
+
+        // Bars
+        chart.selectAll(".bar")
+             .data(data)
+             .enter()
+             .append("rect")
+             .attr("class", "bar")
+             .attr("y", d => y(d.country))
+             .attr("height", y.bandwidth())
+             .attr("width", d => x(d.value))
+             .style("fill", d => d.country === "Total International Arrivals" ? "url(#lightOrangePink)" : "url(#lightPinkBlue)")
+             .on("mouseover", (event, d) => {
+                tooltip.style("opacity", 1)
+                       .html(`${d.country}:<br>${d3.format(",")(d.value)} tourists`)
+                       .style("left", `${event.pageX + 10}px`)
+                       .style("top", `${event.pageY - 20}px`);
+             })
+             .on("mouseout", () => tooltip.style("opacity", 0));
+
+        chart.append("g").call(d3.axisLeft(y).tickSize(0)).selectAll("text").attr("class", "axis-label");
+        chart.append("g").attr("transform", `translate(0, ${height})`)
+             .call(d3.axisBottom(x).ticks(5).tickFormat(d3.format(","))).selectAll("text").attr("class", "axis-label");
+
+        // Legend below horizontal axis
+        const legend = svg.append("g").attr("transform", `translate(${margin.left}, ${margin.top + height + 40})`);
+        legend.append("rect").attr("width", width).attr("height", 20).style("fill", "url(#lightPinkBlue)");
+        legend.append("text").attr("y", 15).attr("x", width / 2 - 70).text("Tourist Numbers: Low to High").attr("class", "axis-label");
+    </script>
+</body>
+</html>
